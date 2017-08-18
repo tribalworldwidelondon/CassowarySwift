@@ -31,14 +31,14 @@
 
  */
 
-extension Double {
+internal extension Double {
     static let epsilon: Double = 1.0e-8
-
-    public var isNearZero: Bool {
+    
+    internal var isNearZero: Bool {
         return self < 0.0 ? -self < .epsilon : self < .epsilon
     }
 
-    public func isApproximately(value: Double) -> Bool {
+    internal func isApproximately(value: Double) -> Bool {
         return abs(self - value) < .epsilon
     }
 

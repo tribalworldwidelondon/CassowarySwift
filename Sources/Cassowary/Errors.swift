@@ -32,16 +32,34 @@
  */
 
 public enum CassowaryError: Error {
+    /// An internal error.
     case internalError(String)
+    
+    /// The constraint is a non-linear expression, which isn't supported
     case nonLinear
+    
+    /// The constraint is not added to the solver
     case unknownConstraint(Constraint)
+    
+    /// The constraint already exists in the solver
     case duplicateConstraint(Constraint)
+    
+    /// The constraint cannot be satisfied by the solver
     case unsatisfiableConstraint(Constraint, [Constraint])
+    
+    /// The variable has not been added as an edit variable
     case unknownEditVariable
+    
+    /// The variable has already been added as an edit variable
     case duplicateEditVariable
+    
+    /// The strength cannot be set to 'Required'
     case requiredFailure
+    
+    /// An internal solver error.
     case internalSolver(String)
 
+    /// Provides a more detailed description of the error
     public func detailedDescription() -> String {
         switch self {
         case .unsatisfiableConstraint(let constraint, let allConstraints):

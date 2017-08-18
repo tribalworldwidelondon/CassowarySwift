@@ -84,7 +84,8 @@ public class Expression: CustomStringConvertible, CassowaryDebugDescription {
     public var isConstant: Bool {
         return terms.count == 0
     }
-
+    
+    /// :nodoc:
     public var description: String {
         if _alias != nil {
             return _alias!

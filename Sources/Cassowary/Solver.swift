@@ -40,10 +40,10 @@ public class Solver {
 
     private class EditInfo {
         var tag: Tag
-        var constraint: Constraint
+        var constraint: EditConstraint
         var constant: Double
 
-        public init(constraint: Constraint, tag: Tag, constant: Double){
+        public init(constraint: EditConstraint, tag: Tag, constant: Double){
             self.constraint = constraint
             self.tag = tag
             self.constant = constant
@@ -64,9 +64,7 @@ public class Solver {
         
     }
 
-    /**
-     Add a constraint to the solver.
-     */
+    /// Add a constraint to the solver.
     public func addConstraint(_ constraint: Constraint) throws {
         if _cns[constraint] != nil {
             throw CassowaryError.duplicateConstraint(constraint)
@@ -98,7 +96,8 @@ public class Solver {
 
         try optimize(objective: _objective)
     }
-
+    
+    /// Remove a constraint from the solver
     public func removeConstraint(_ constraint: Constraint) throws {
         guard let tag = _cns[constraint] else {
             throw CassowaryError.unknownConstraint(constraint)
@@ -141,7 +140,7 @@ public class Solver {
         }
     }
 
-    func removeMarkerEffects(marker: Symbol, strength: Double) {
+    private func removeMarkerEffects(marker: Symbol, strength: Double) {
         if let row = _rows[marker] {
             _objective.insert(other: row, coefficient: -strength)
         } else {
@@ -149,7 +148,7 @@ public class Solver {
         }
     }
 
-    func getMarkerLeavingRow(marker: Symbol) -> Row? {
+    private func getMarkerLeavingRow(marker: Symbol) -> Row? {
         let dmax = Double.greatestFiniteMagnitude
         var r1 = dmax
         var r2 = dmax
@@ -193,11 +192,18 @@ public class Solver {
 
         return third
     }
-
+    
+    /// Check if the solver has a constraint
     public func hasConstraint(_ constraint: Constraint) -> Bool {
         return _cns[constraint] != nil
     }
-
+    
+    /**
+     Add an edit constraint on the provided variable, so that suggestValue can be used on it.
+     - parameters:
+         - variable: The Variable to add the edit constraint on
+         - strength: The strength of the constraint to add. This cannot be "Required".
+     */
     public func addEditVariable(variable: Variable, strength: Double) throws {
         guard _edits[variable] == nil else {
             throw CassowaryError.duplicateEditVariable
@@ -211,7 +217,7 @@ public class Solver {
 
         var terms = [Term]()
         terms.append(Term(variable: variable))
-        let constraint = Constraint(expr: Expression(terms: terms), op: .equal, strength: clippedStrength)
+        let constraint = EditConstraint(expr: Expression(terms: terms), op: .equal, strength: clippedStrength)
 
         do {
             try addConstraint(constraint)
@@ -223,7 +229,11 @@ public class Solver {
         let info = EditInfo(constraint: constraint, tag: _cns[constraint]!, constant: 0.0)
         _edits[variable] = info
     }
-
+    
+    /**
+     Remove an edit constraint on the provided variable.
+     Throws an error if the variable does not have an edit constraint
+     */
     public func removeEditVariable(_ variable: Variable) throws {
         guard let edit = _edits[variable] else {
             throw CassowaryError.unknownEditVariable
@@ -237,11 +247,17 @@ public class Solver {
 
         _edits[variable] = nil
     }
-
+    
+    /// Checks if the solver has an edit constraint for the provided variable.
     public func hasEditVariable(_ variable: Variable) -> Bool {
         return _edits[variable] != nil
     }
-
+    
+    /**
+     Specify a desired value for the provided variable.
+     The variable needs to have been previously added as an edit variable.
+     Throws an error if the provided variable has not been previously added as an edit variable.
+     */
     public func suggestValue(variable: Variable, value: Double) throws {
         guard let info = _edits[variable] else {
             throw CassowaryError.unknownEditVariable
@@ -251,6 +267,8 @@ public class Solver {
         info.constant = value
 
         var row = _rows[info.tag.marker]
+        
+        _edits[variable]!.constraint.suggestedValue = value
 
         if row != nil {
             if row!.add(-delta) < 0.0 {
@@ -468,7 +486,7 @@ public class Solver {
      This method will substitute all instances of the parametric symbol
      in the tableau and the objective function with the given row.
      */
-    func substitute(symbol: Symbol, row: Row) {
+    private func substitute(symbol: Symbol, row: Row) {
         for rowEntry in _rows.orderedEntries {
             rowEntry.value.substitute(symbol: symbol, row: row)
 
@@ -490,7 +508,7 @@ public class Solver {
      This method performs iterations of Phase 2 of the simplex method
      until the objective function reaches a minimum.
      */
-    func optimize(objective: Row) throws {
+    private func optimize(objective: Row) throws {
         while true {
             let entering = Solver.getEnteringSymbol(objective)
             if entering.symbolType == .invalid {
@@ -524,7 +542,7 @@ public class Solver {
         }
     }
 
-    func dualOptimize() throws {
+    private func dualOptimize() throws {
         while !_infeasibleRows.isEmpty {
             let leaving = _infeasibleRows.popLast()!
 

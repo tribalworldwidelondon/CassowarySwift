@@ -31,43 +31,63 @@
 
  */
 
-public class Constraint: CassowaryDebugDescription {
-    var debugDescription: String = ""
+/**
+ This is a class that describes a constraint placed on a number of variables in the solver system.
+ */
+public class Constraint: CassowaryDebugDescription, CustomStringConvertible {
+    internal var debugDescription: String = ""
     
-    func addingDebugDescription(_ desc: String) -> Self {
+    internal func addingDebugDescription(_ desc: String) -> Self {
         debugDescription = desc
         return self
     }
     
+    /// :nodoc:
+    public var description: String {
+        if debugDescription.characters.count > 0 {
+            return "Constraint<\(debugDescription) | Strength: \(Strength.readableString(strength))>"
+        }
+        
+        return "Constraint<(\(expression)) | strength: \(Strength.readableString(strength)) | operator: \(op)>"
+    }
 
     private var _expression: Expression
+    
+    /// The expression held by the constraint
     public var expression: Expression {
         get { return _expression }
         set { _expression = newValue }
     }
 
     private var _strength: Double
+    
+    /// The strength of the constraint
     public var strength: Double {
         get { return _strength }
         set { _strength = newValue }
     }
 
     private var _op: RelationalOperator
+    
+    /// The operator of the constraint
     public var op: RelationalOperator {
         get { return _op }
         set { _op = newValue }
     }
-
+    
+    /// Create a constraint with the given expression and operator
     public convenience init(expr: Expression, op: RelationalOperator) {
         self.init(expr: expr, op: op, strength: Strength.REQUIRED)
     }
-
+    
+    /// Create a constraint with the given expression, operator and strength
     public init(expr: Expression, op: RelationalOperator, strength: Double) {
         _expression = Constraint.reduce(expr)
         _op = op
         _strength = Strength.clip(strength)
     }
-
+    
+    /// Create a constraint, copying the provided constraint, with the given strength
     public convenience init(other: Constraint, strength: Double) {
         self.init(expr: other.expression, op: other.op, strength: strength)
     }
@@ -90,7 +110,8 @@ public class Constraint: CassowaryDebugDescription {
 
         return Expression(terms: reducedTerms, constant: expr.constant)
     }
-
+    
+    /// Set the strength of the constraint
     public func setStrength(_ newStrength: Double) -> Constraint {
         _strength = newStrength
         return self
@@ -98,21 +119,9 @@ public class Constraint: CassowaryDebugDescription {
 
 }
 
-extension Constraint: CustomStringConvertible {
-
-    public var description: String {
-        if debugDescription.characters.count > 0 {
-            return "Constraint<\(debugDescription) | Strength: \(Strength.readableString(strength))>"
-        }
-        
-        return "Constraint<(\(expression)) | strength: \(Strength.readableString(strength)) | operator: \(op)>"
-    }
-
-}
-
 // MARK: Equatable
 extension Constraint: Equatable {
-
+    /// :nodoc:
     public static func == (lhs: Constraint, rhs: Constraint) -> Bool {
         return lhs.hashValue == rhs.hashValue
     }
@@ -121,10 +130,26 @@ extension Constraint: Equatable {
 
 // MARK: Hashable
 extension Constraint: Hashable {
-
+    /// :nodoc:
     public var hashValue: Int {
         // Return a hash 'unique' to this object
         return ObjectIdentifier(self).hashValue
     }
 
+}
+
+
+// MARK: - EditConstraint
+
+internal class EditConstraint: Constraint {
+    internal var suggestedValue: Double?
+    
+    /// :nodoc:
+    override public var description: String {
+        if debugDescription.characters.count > 0 {
+            return "EditConstraint<\(debugDescription) | Strength: \(Strength.readableString(strength))>"
+        }
+        
+        return "EditConstraint<\(expression) == \(suggestedValue ?? 0) | Strength: \(Strength.readableString(strength))>"
+    }
 }
