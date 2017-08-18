@@ -34,5 +34,8 @@ solver.updateVariables()
 
 ```
 
+# Documentation
+[Documentation can be found on CocoaDocs](http://cocoadocs.org/docsets/Cassowary)
+
 # Acknowledgements
 Cassowary Swift originally started as a direct port of [kiwi-java](https://github.com/alexbirkett/kiwi-java) by [Alex Birkett](https://github.com/alexbirkett)
