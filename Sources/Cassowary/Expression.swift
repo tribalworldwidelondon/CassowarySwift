@@ -60,21 +60,14 @@ public class Expression: CustomStringConvertible, CassowaryDebugDescription {
         return self
     }
     
-
-    private var _terms: [Term] = []
-    public var terms: [Term] {
-        get { return _terms }
-        set { _terms = newValue }
-    }
-
-    private var _constant: Double
-    public var constant: Double {
-        get { return _constant }
-        set { _constant = newValue }
-    }
+    /// The terms of the expression
+    private(set) var terms: [Term] = []
+    
+    /// The constant of the expression
+    private(set) var constant: Double
 
     public var value: Double {
-        return terms.reduce(_constant) { result, term in
+        return terms.reduce(constant) { result, term in
             result + term.value
         }
     }
@@ -121,12 +114,12 @@ public class Expression: CustomStringConvertible, CassowaryDebugDescription {
     }
 
     public init(constant: Double) {
-        _constant = constant
+        self.constant = constant
     }
 
     public init(term: Term, constant: Double) {
-        _constant = constant
-        _terms.append(term)
+        self.constant = constant
+        self.terms.append(term)
     }
 
     public convenience init(term: Term) {
@@ -134,8 +127,8 @@ public class Expression: CustomStringConvertible, CassowaryDebugDescription {
     }
 
     public init(terms: [Term], constant: Double) {
-        _constant = constant
-        _terms = terms
+        self.constant = constant
+        self.terms = terms
     }
 
     public convenience init(terms: [Term]) {

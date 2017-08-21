@@ -91,14 +91,12 @@ class ExpressionTests: XCTestCase {
         y.value = 3.0
         let term2 = Term(variable: y)
         
-        let expression = Expression()
-        expression.terms = [term1, term2]
+        let expression = Expression(terms: [term1, term2])
         XCTAssertEqual(expression.terms.count, 2)
     }
     
     func testUpdateConstant() {
-        let expression = Expression()
-        expression.constant = 1234.5678
+        let expression = Expression(constant: 1234.5678)
         
         assertIsCloseTo(expression.constant, 1234.5678)
     }
