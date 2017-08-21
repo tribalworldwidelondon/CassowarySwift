@@ -39,25 +39,16 @@ public class Term: CustomStringConvertible, CassowaryDebugDescription {
         return self
     }
 
-    private var _variable: Variable
-    public var variable: Variable {
-        get { return _variable }
-        set { _variable = newValue }
-    }
-
-    private var _coefficient: Double
-    public var coefficient: Double {
-        get { return _coefficient }
-        set { _coefficient = newValue }
-    }
+    public var variable: Variable
+    public var coefficient: Double
 
     public var value: Double {
         return coefficient * variable.value
     }
 
     public init(variable: Variable, coefficient: Double) {
-        _variable = variable
-        _coefficient = coefficient
+        self.variable = variable
+        self.coefficient = coefficient
     }
 
     public var description: String {
