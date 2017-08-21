@@ -46,11 +46,6 @@ extension Expression {
 }
 
 // MARK: - Variable *, /, and unary invert
-public func * (_ variable: Variable, _ coefficient: CassowaryFloat) -> Term {
-    return Term(variable: variable, coefficient: coefficient)
-        .addingDebugDescription("\(variable.name) * \(coefficient)")
-}
-
 
 public func * (_ variable: Variable, _ coefficient: CGFloat) -> Term {
     return Term(variable: variable, coefficient: coefficient)
