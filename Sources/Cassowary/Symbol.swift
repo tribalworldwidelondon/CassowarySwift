@@ -40,17 +40,14 @@ public class Symbol {
         case dummy
     }
 
-    private var _symbolType: SymbolType
-    public var symbolType: SymbolType {
-        return _symbolType
-    }
+    private(set) var symbolType: SymbolType
 
     public init() {
-        _symbolType = .invalid
+        symbolType = .invalid
     }
 
     public init(_ symbolType: SymbolType) {
-        _symbolType = symbolType
+        self.symbolType = symbolType
     }
 }
 
