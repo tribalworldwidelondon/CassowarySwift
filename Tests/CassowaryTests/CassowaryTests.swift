@@ -311,19 +311,50 @@ class CassowaryTests: XCTestCase {
         
         let solver = Solver()
         
-        do {
-            //try solver.addConstraint(parent.top == 100)
-            try solver.addConstraint(child.top == parent.top)
-            try solver.addConstraint(child.bottom == parent.bottom)
-            try solver.addEditVariable(variable: child.height, strength: Strength.STRONG)
-            try solver.suggestValue(variable: child.height, value: 24.0)
-        } catch {
-            print(error)
-        }
+        try solver.addConstraint(child.top == parent.top)
+        try solver.addConstraint(child.bottom == parent.bottom)
+        try solver.addEditVariable(variable: child.height, strength: Strength.STRONG)
+        try solver.suggestValue(variable: child.height, value: 24.0)
         
         solver.updateVariables()
         
         assertIsCloseTo(parent.height, 24)
+    }
+    
+    func testAddEditVariable() {
+        let v = Variable("test")
+        let solver = Solver()
+        
+        // Shouldn't be able to add with a REQUIRED strength
+        XCTAssertThrowsError(try solver.addEditVariable(variable: v, strength: Strength.REQUIRED))
+        
+        XCTAssertNoThrow(try solver.addEditVariable(variable: v, strength: Strength.STRONG))
+        
+        // Should throw a DuplicateEditVariable error.
+        XCTAssertThrowsError(try solver.addEditVariable(variable: v, strength: Strength.STRONG))
+    }
+    
+    func testRemoveEditVariable() {
+        let v = Variable("test")
+        
+        let solver = Solver()
+        
+        // Should throw an error- the edit variable hasn't been added yet.
+        XCTAssertThrowsError(try solver.removeEditVariable(v))
+        
+        XCTAssertNoThrow(try solver.addEditVariable(variable: v, strength: Strength.STRONG))
+        XCTAssertNoThrow(try solver.removeEditVariable(v))
+    }
+    
+    func testSuggestValue() {
+        let v = Variable("test")
+        let solver = Solver()
+        
+        // Should throw an error, as it hasn't been added as an edit variable
+        XCTAssertThrowsError(try solver.suggestValue(variable: v, value: 1.0))
+        
+        XCTAssertNoThrow(try solver.addEditVariable(variable: v, strength: Strength.STRONG))
+        XCTAssertNoThrow(try solver.suggestValue(variable: v, value: 1.0))
     }
 
 }
