@@ -110,7 +110,7 @@ public class Expression: CustomStringConvertible, CassowaryDebugDescription {
     // MARK: Initializers
 
     public convenience init() {
-        self.init(constant: 0)
+        self.init(constant: 0.0)
     }
 
     public init(constant: Double) {
