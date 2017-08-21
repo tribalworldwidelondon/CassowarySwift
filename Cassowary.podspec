@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name         = "Cassowary"
-  s.version      = "0.1.1"
+  s.version      = "0.1.2"
   s.summary      = "A Swift port of the Cassowary linear constraint solver"
   s.description  = <<-DESC
   A library that implements the Cassowary linear constraint solving algorithm in pure Swift
