@@ -50,13 +50,13 @@ public class Solver {
         }
     }
 
-    private var _cns = OrderedDictionary<Constraint, Tag>()
-    private var _rows = OrderedDictionary<Symbol, Row>()
-    private var _vars = OrderedDictionary<Variable, Symbol>()
-    private var _edits = OrderedDictionary<Variable, EditInfo>()
-    private var _infeasibleRows = [Symbol]()
-    private var _objective = Row()
-    private var _artificial: Row?
+    private var constraintDict = OrderedDictionary<Constraint, Tag>()
+    private var rows = OrderedDictionary<Symbol, Row>()
+    private var variableSymbols = OrderedDictionary<Variable, Symbol>()
+    private var variableEditInfo = OrderedDictionary<Variable, EditInfo>()
+    private var infeasibleRows = [Symbol]()
+    private var objective = Row()
+    private var artificial: Row?
     
     // MARK: Initializers
     
@@ -66,7 +66,7 @@ public class Solver {
 
     /// Add a constraint to the solver.
     public func addConstraint(_ constraint: Constraint) throws {
-        if _cns[constraint] != nil {
+        if constraintDict[constraint] != nil {
             throw CassowaryError.duplicateConstraint(constraint)
         }
 
@@ -76,7 +76,7 @@ public class Solver {
 
         if subject.symbolType == .invalid && Solver.allDummies(row: row) {
             if !row.constant.isNearZero {
-                throw CassowaryError.unsatisfiableConstraint(constraint, _cns.keys)
+                throw CassowaryError.unsatisfiableConstraint(constraint, constraintDict.keys)
             } else {
                 subject = tag.marker
             }
@@ -84,38 +84,38 @@ public class Solver {
 
         if subject.symbolType == .invalid {
             if try !addWithArtificialVariable(row: row) {
-                throw CassowaryError.unsatisfiableConstraint(constraint, _cns.keys)
+                throw CassowaryError.unsatisfiableConstraint(constraint, constraintDict.keys)
             }
         } else {
             row.solveFor(subject)
             substitute(symbol: subject, row: row)
-            _rows[subject] = row
+            rows[subject] = row
         }
 
-        _cns[constraint] = tag
+        constraintDict[constraint] = tag
 
-        try optimize(objective: _objective)
+        try optimize(objective: objective)
     }
     
     /// Remove a constraint from the solver
     public func removeConstraint(_ constraint: Constraint) throws {
-        guard let tag = _cns[constraint] else {
+        guard let tag = constraintDict[constraint] else {
             throw CassowaryError.unknownConstraint(constraint)
         }
 
-        _cns[constraint] = nil
+        constraintDict[constraint] = nil
         removeConstraintEffects(constraint: constraint, tag: tag)
 
-        if _rows[tag.marker] != nil {
-            _rows[tag.marker] = nil
+        if rows[tag.marker] != nil {
+            rows[tag.marker] = nil
         } else {
             guard let row = getMarkerLeavingRow(marker: tag.marker) else {
                 throw CassowaryError.internalSolver("Internal solver error")
             }
 
             var leaving: Symbol?
-            for s in _rows.keys {
-                if let r = _rows[s], r == row {
+            for s in rows.keys {
+                if let r = rows[s], r == row {
                     leaving = s
                 }
             }
@@ -124,12 +124,12 @@ public class Solver {
                 throw CassowaryError.internalSolver("Internal solver error")
             }
 
-            _rows[leaving!] = nil
+            rows[leaving!] = nil
             row.solveFor(leaving!, tag.marker)
             substitute(symbol: tag.marker, row: row)
         }
 
-        try optimize(objective: _objective)
+        try optimize(objective: objective)
     }
 
     private func removeConstraintEffects(constraint: Constraint, tag: Tag) {
@@ -141,10 +141,10 @@ public class Solver {
     }
 
     private func removeMarkerEffects(marker: Symbol, strength: Double) {
-        if let row = _rows[marker] {
-            _objective.insert(other: row, coefficient: -strength)
+        if let row = rows[marker] {
+            objective.insert(other: row, coefficient: -strength)
         } else {
-            _objective.insert(symbol: marker, coefficient: -strength)
+            objective.insert(symbol: marker, coefficient: -strength)
         }
     }
 
@@ -157,8 +157,8 @@ public class Solver {
         var second: Row?
         var third: Row?
 
-        for s in _rows.keys {
-            let candidateRow = _rows[s]!
+        for s in rows.keys {
+            let candidateRow = rows[s]!
             let c = candidateRow.coefficientFor(marker)
 
             if c == 0.0 {
@@ -195,7 +195,7 @@ public class Solver {
     
     /// Check if the solver has a constraint
     public func hasConstraint(_ constraint: Constraint) -> Bool {
-        return _cns[constraint] != nil
+        return constraintDict[constraint] != nil
     }
     
     /**
@@ -205,7 +205,7 @@ public class Solver {
          - strength: The strength of the constraint to add. This cannot be "Required".
      */
     public func addEditVariable(variable: Variable, strength: Double) throws {
-        guard _edits[variable] == nil else {
+        guard variableEditInfo[variable] == nil else {
             throw CassowaryError.duplicateEditVariable
         }
 
@@ -226,8 +226,8 @@ public class Solver {
         }
 
         // TODO: Check if tag can be nil
-        let info = EditInfo(constraint: constraint, tag: _cns[constraint]!, constant: 0.0)
-        _edits[variable] = info
+        let info = EditInfo(constraint: constraint, tag: constraintDict[constraint]!, constant: 0.0)
+        variableEditInfo[variable] = info
     }
     
     /**
@@ -235,7 +235,7 @@ public class Solver {
      Throws an error if the variable does not have an edit constraint
      */
     public func removeEditVariable(_ variable: Variable) throws {
-        guard let edit = _edits[variable] else {
+        guard let edit = variableEditInfo[variable] else {
             throw CassowaryError.unknownEditVariable
         }
 
@@ -245,12 +245,12 @@ public class Solver {
             print(error)
         }
 
-        _edits[variable] = nil
+        variableEditInfo[variable] = nil
     }
     
     /// Checks if the solver has an edit constraint for the provided variable.
     public func hasEditVariable(_ variable: Variable) -> Bool {
-        return _edits[variable] != nil
+        return variableEditInfo[variable] != nil
     }
     
     /**
@@ -259,42 +259,42 @@ public class Solver {
      Throws an error if the provided variable has not been previously added as an edit variable.
      */
     public func suggestValue(variable: Variable, value: Double) throws {
-        guard let info = _edits[variable] else {
+        guard let info = variableEditInfo[variable] else {
             throw CassowaryError.unknownEditVariable
         }
 
         let delta = value - info.constant
         info.constant = value
 
-        var row = _rows[info.tag.marker]
+        var row = rows[info.tag.marker]
         
-        _edits[variable]!.constraint.suggestedValue = value
+        variableEditInfo[variable]!.constraint.suggestedValue = value
 
         if row != nil {
             if row!.add(-delta) < 0.0 {
-                _infeasibleRows.append(info.tag.marker)
+                infeasibleRows.append(info.tag.marker)
             }
             try dualOptimize()
             return
         }
 
         if info.tag.other != nil {
-            row = _rows[info.tag.other!]
+            row = rows[info.tag.other!]
 
             if row != nil {
                 if row!.add(delta) < 0.0 {
-                    _infeasibleRows.append(info.tag.other!)
+                    infeasibleRows.append(info.tag.other!)
                 }
                 try dualOptimize()
                 return
             }
         }
 
-        for s in _rows.keys {
-            let currentRow = _rows[s]!
+        for s in rows.keys {
+            let currentRow = rows[s]!
             let coefficient = currentRow.coefficientFor(info.tag.marker)
             if coefficient != 0.0 && currentRow.add(delta * coefficient) < 0.0 && s.symbolType != .external {
-                _infeasibleRows.append(s)
+                infeasibleRows.append(s)
             }
         }
 
@@ -305,8 +305,8 @@ public class Solver {
      Update the values of the external solver variables.
      */
     public func updateVariables() {
-        for variable in _vars.keys {
-            if let row = _rows[_vars[variable]!] {
+        for variable in variableSymbols.keys {
+            if let row = rows[variableSymbols[variable]!] {
                 variable.value = row.constant
             } else {
                 variable.value = 0
@@ -340,7 +340,7 @@ public class Solver {
             if !term.coefficient.isNearZero {
                 let symbol = getVarSymbol(term.variable)
 
-                if let otherRow = _rows[symbol] {
+                if let otherRow = rows[symbol] {
                     row.insert(other: otherRow, coefficient: term.coefficient)
                 } else {
                     row.insert(symbol: symbol, coefficient: term.coefficient)
@@ -359,7 +359,7 @@ public class Solver {
                 let error = Symbol(.error)
                 tag.other = error
                 row.insert(symbol: error, coefficient: -coeff)
-                _objective.insert(symbol: error, coefficient: constraint.strength)
+                objective.insert(symbol: error, coefficient: constraint.strength)
             }
         case .equal:
             if constraint.strength < Strength.REQUIRED {
@@ -369,8 +369,8 @@ public class Solver {
                 tag.other = errminus
                 row.insert(symbol: errplus, coefficient: -1.0) // v = eplus - eminus
                 row.insert(symbol: errminus, coefficient: 1.0) // v - eplus + eminus = 0
-                _objective.insert(symbol: errplus, coefficient: constraint.strength)
-                _objective.insert(symbol: errminus, coefficient: constraint.strength)
+                objective.insert(symbol: errplus, coefficient: constraint.strength)
+                objective.insert(symbol: errminus, coefficient: constraint.strength)
             } else {
                 let dummy = Symbol(.dummy)
                 tag.marker = dummy
@@ -429,29 +429,29 @@ public class Solver {
         // Create and add the artificial variable to the tableau
 
         let art = Symbol(.slack)
-        _rows[art] = Row(row)
+        rows[art] = Row(row)
 
-        _artificial = Row(row)
+        artificial = Row(row)
 
         // Optimize the artificial objective. This is successful
         // only if the artificial objective is optimized to zero.
-        try optimize(objective: _artificial!)
-        let success = _artificial!.constant.isNearZero
-        _artificial = nil
+        try optimize(objective: artificial!)
+        let success = artificial!.constant.isNearZero
+        artificial = nil
 
         // If the artificial variable is basic, pivot the row so that
         // it becomes basic. If the row is constant, exit early.
 
-        if let rowptr = _rows[art] {
+        if let rowptr = rows[art] {
             var deleteQueue = [Symbol]()
-            for s in _rows.keys {
-                if _rows[s]! == rowptr {
+            for s in rows.keys {
+                if rows[s]! == rowptr {
                     deleteQueue.append(s)
                 }
             }
 
             while !deleteQueue.isEmpty {
-                _rows[deleteQueue.popLast()!] = nil
+                rows[deleteQueue.popLast()!] = nil
             }
 
             deleteQueue.removeAll()
@@ -467,15 +467,15 @@ public class Solver {
 
             rowptr.solveFor(art, entering)
             substitute(symbol: entering, row: rowptr)
-            _rows[entering] = rowptr
+            rows[entering] = rowptr
         }
 
         // Remove the artificial variable from the tableau.
-        for rowEntry in _rows.orderedEntries {
+        for rowEntry in rows.orderedEntries {
             rowEntry.value.remove(symbol: art)
         }
 
-        _objective.remove(symbol: art)
+        objective.remove(symbol: art)
 
         return success
     }
@@ -487,18 +487,18 @@ public class Solver {
      in the tableau and the objective function with the given row.
      */
     private func substitute(symbol: Symbol, row: Row) {
-        for rowEntry in _rows.orderedEntries {
+        for rowEntry in rows.orderedEntries {
             rowEntry.value.substitute(symbol: symbol, row: row)
 
             if rowEntry.key.symbolType != .external && rowEntry.value.constant < 0.0 {
-                _infeasibleRows.append(rowEntry.key)
+                infeasibleRows.append(rowEntry.key)
             }
         }
 
-        _objective.substitute(symbol: symbol, row: row)
+        objective.substitute(symbol: symbol, row: row)
 
-        if _artificial != nil {
-            _artificial!.substitute(symbol: symbol, row: row)
+        if artificial != nil {
+            artificial!.substitute(symbol: symbol, row: row)
         }
     }
 
@@ -521,41 +521,41 @@ public class Solver {
 
             var leaving: Symbol?
 
-            for key in _rows.keys {
-                if _rows[key]! == entry {
+            for key in rows.keys {
+                if rows[key]! == entry {
                     leaving = key
                 }
             }
 
             var entryKey: Symbol?
 
-            for key in _rows.keys {
-                if _rows[key]! == entry {
+            for key in rows.keys {
+                if rows[key]! == entry {
                     entryKey = key
                 }
             }
 
-            _rows[entryKey!] = nil
+            rows[entryKey!] = nil
             entry.solveFor(leaving!, entering)
             substitute(symbol: entering, row: entry)
-            _rows[entering] = entry
+            rows[entering] = entry
         }
     }
 
     private func dualOptimize() throws {
-        while !_infeasibleRows.isEmpty {
-            let leaving = _infeasibleRows.popLast()!
+        while !infeasibleRows.isEmpty {
+            let leaving = infeasibleRows.popLast()!
 
-            if let row = _rows[leaving], row.constant < 0.0 {
+            if let row = rows[leaving], row.constant < 0.0 {
                 let entering = getDualEnteringSymbol(row)
                 if entering.symbolType == .invalid {
                     throw CassowaryError.internalSolver("Internal solver error")
                 }
 
-                _rows[leaving] = nil
+                rows[leaving] = nil
                 row.solveFor(leaving, entering)
                 substitute(symbol: entering, row: row)
-                _rows[entering] = row
+                rows[entering] = row
             }
         }
     }
@@ -588,7 +588,7 @@ public class Solver {
             if s.symbolType != .dummy {
                 let currentCell = row.cells[s]!
                 if currentCell > 0.0 {
-                    let coefficient = _objective.coefficientFor(s)
+                    let coefficient = objective.coefficientFor(s)
                     let r = coefficient / currentCell
                     if r < ratio {
                         ratio = r
@@ -637,9 +637,9 @@ public class Solver {
         var ratio = Double.greatestFiniteMagnitude
         var row: Row?
 
-        for key in _rows.keys {
+        for key in rows.keys {
             if key.symbolType != .external {
-                let candidateRow = _rows[key]!
+                let candidateRow = rows[key]!
                 let temp = candidateRow.coefficientFor(entering)
                 if temp < 0 {
                     let tempRatio = -candidateRow.constant / temp
@@ -660,11 +660,11 @@ public class Solver {
      * If a symbol does not exist for the variable, one will be created.
      */
     private func getVarSymbol(_ variable: Variable) -> Symbol {
-        if let symbol = _vars[variable] {
+        if let symbol = variableSymbols[variable] {
             return symbol
         } else {
             let symbol = Symbol(.external)
-            _vars[variable] = symbol
+            variableSymbols[variable] = symbol
             return symbol
         }
     }
