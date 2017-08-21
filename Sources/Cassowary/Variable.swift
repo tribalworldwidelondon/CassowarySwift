@@ -48,18 +48,9 @@ public class Variable: CustomStringConvertible {
         return _name ?? "\(value)"
     }
 
-    private var _value: Double = 0.0
-    public var value: Double {
-        get {
-            return _value
-        }
-        set {
-            _value = newValue
-        }
-    }
+    public var value: Double = 0.0
 
     public var description: String {
-        
         return "\(name)"
     }
 
@@ -68,7 +59,7 @@ public class Variable: CustomStringConvertible {
     }
 
     public init(_ value: Double) {
-        _value = value
+        self.value = value
     }
     
     public init(_ name: String, owner: AnyObject) {
