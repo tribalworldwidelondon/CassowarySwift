@@ -50,30 +50,15 @@ public class Constraint: CassowaryDebugDescription, CustomStringConvertible {
         
         return "Constraint<(\(expression)) | strength: \(Strength.readableString(strength)) | operator: \(op)>"
     }
-
-    private var _expression: Expression
     
     /// The expression held by the constraint
-    public var expression: Expression {
-        get { return _expression }
-        set { _expression = newValue }
-    }
+    private(set) var expression: Expression
 
-    private var _strength: Double
-    
     /// The strength of the constraint
-    public var strength: Double {
-        get { return _strength }
-        set { _strength = newValue }
-    }
+    public var strength: Double
 
-    private var _op: RelationalOperator
-    
     /// The operator of the constraint
-    public var op: RelationalOperator {
-        get { return _op }
-        set { _op = newValue }
-    }
+    private(set) var op: RelationalOperator
     
     /// Create a constraint with the given expression and operator
     public convenience init(expr: Expression, op: RelationalOperator) {
@@ -82,9 +67,9 @@ public class Constraint: CassowaryDebugDescription, CustomStringConvertible {
     
     /// Create a constraint with the given expression, operator and strength
     public init(expr: Expression, op: RelationalOperator, strength: Double) {
-        _expression = Constraint.reduce(expr)
-        _op = op
-        _strength = Strength.clip(strength)
+        self.expression = Constraint.reduce(expr)
+        self.op = op
+        self.strength = Strength.clip(strength)
     }
     
     /// Create a constraint, copying the provided constraint, with the given strength
@@ -113,7 +98,7 @@ public class Constraint: CassowaryDebugDescription, CustomStringConvertible {
     
     /// Set the strength of the constraint
     public func setStrength(_ newStrength: Double) -> Constraint {
-        _strength = newStrength
+        self.strength = newStrength
         return self
     }
 
