@@ -35,29 +35,21 @@ import Foundation
 
 public class Row {
 
-    private var _constant: Double
-    public var constant: Double {
-        get { return _constant }
-        set { _constant = newValue }
-    }
+    private(set) var constant: Double
 
-    private var _cells: OrderedDictionary<Symbol, Double> = [:]
-    public var cells: OrderedDictionary<Symbol, Double> {
-        get { return _cells }
-        set { _cells = newValue }
-    }
+    private(set) var cells: OrderedDictionary<Symbol, Double> = [:]
 
     public convenience init() {
         self.init(constant: 0)
     }
 
     public init(constant: Double) {
-        _constant = constant
+        self.constant = constant
     }
 
     public init(_ other: Row) {
-        _cells = OrderedDictionary<Symbol, Double>(other.cells)
-        _constant = other.constant
+        self.cells = OrderedDictionary<Symbol, Double>(other.cells)
+        self.constant = other.constant
     }
 
     /**
@@ -65,8 +57,8 @@ public class Row {
      - returns: The new value of the constant
      */
     func add(_ value: Double) -> Double {
-        _constant += value
-        return _constant
+        self.constant += value
+        return self.constant
     }
 
     /**
@@ -79,14 +71,14 @@ public class Row {
     func insert(symbol: Symbol, coefficient: Double) {
         var coeff = coefficient
 
-        if let existingCoefficient = _cells[symbol] {
+        if let existingCoefficient = cells[symbol] {
             coeff += existingCoefficient
         }
 
         if coeff.isNearZero {
-            _cells[symbol] = nil
+            cells[symbol] = nil
         } else {
-            _cells[symbol] = coeff
+            cells[symbol] = coeff
         }
     }
 
@@ -109,7 +101,7 @@ public class Row {
      coefficient of zero will be removed from the row.
      */
     func insert(other: Row, coefficient: Double) {
-        _constant += other.constant * coefficient
+        constant += other.constant * coefficient
 
         for s in other.cells.keys {
             let coeff = other.cells[s]! * coefficient
@@ -151,7 +143,7 @@ public class Row {
      Reverse the sign of the constant and all cells in the row.
      */
     func reverseSign() {
-        _constant = -_constant
+        constant = -constant
 
         var newCells = OrderedDictionary<Symbol, Double>()
 
@@ -160,7 +152,7 @@ public class Row {
             newCells[symbol] = value
         }
 
-        _cells = newCells
+        cells = newCells
     }
 
     /**
@@ -176,7 +168,7 @@ public class Row {
     func solveFor(_ symbol: Symbol) {
         let coeff = -1.0 / cells[symbol]!
         cells[symbol] = nil
-        _constant *= coeff
+        constant *= coeff
 
         var newCells = OrderedDictionary<Symbol, Double>()
 
@@ -185,7 +177,7 @@ public class Row {
             newCells[s] = value
         }
 
-        _cells = newCells
+        cells = newCells
     }
 
     /**
