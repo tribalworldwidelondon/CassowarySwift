@@ -1,11 +1,21 @@
-os:
-  - osx
-language: generic
-osx_image: xcode9
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode9
+      language: objective-c
+    - os: linux
+      dist: trusty
+      sudo: required
+      language: cpp
+
 
 script:
   - swift build
   - swift test
+
+before_install:
+  - chmod ugo+x ./scripts/installSwift.sh
+  - . ./scripts/installSwift.sh
 
 notifications:
   email:
