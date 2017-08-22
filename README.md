@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tribalworldwidelondon/CassowarySwift.svg?branch=master)](https://travis-ci.org/tribalworldwidelondon/CassowarySwift)
 
-A Swift port of the Cassowary linear constraints solver.
+A Swift port of the Cassowary linear constraints solver. Tested on OS X, iOS and Linux.
 
 # Example usage
 
