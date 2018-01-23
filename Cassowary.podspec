@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '8.0'
 
   s.test_spec 'Tests' do |test_spec|
-    test_spec.source_files = 'Tests/**/*.{swift}'
+    test_spec.source_files = 'Tests/CassowaryTests/*.{swift}'
   end
 
 end
