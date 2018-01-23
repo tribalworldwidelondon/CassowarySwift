@@ -44,7 +44,7 @@ public class Constraint: CassowaryDebugDescription, CustomStringConvertible {
     
     /// :nodoc:
     public var description: String {
-        if debugDescription.characters.count > 0 {
+        if debugDescription.count > 0 {
             return "Constraint<\(debugDescription) | Strength: \(Strength.readableString(strength))>"
         }
         
@@ -131,7 +131,7 @@ internal class EditConstraint: Constraint {
     
     /// :nodoc:
     override public var description: String {
-        if debugDescription.characters.count > 0 {
+        if debugDescription.count > 0 {
             return "EditConstraint<\(debugDescription) | Strength: \(Strength.readableString(strength))>"
         }
         
