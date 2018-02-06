@@ -13,6 +13,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/tribalworldwidelondon/CassowarySwift.git", :tag => "1.0.0" }
   s.source_files  = "Sources/**/*.{swift}"
   s.ios.deployment_target = '8.0'
+  s.pod_target_xcconfig = { 'SWIFT_VERSION' => '4.0' }
 
   s.test_spec 'Tests' do |test_spec|
     test_spec.source_files = 'Tests/CassowaryTests/*.{swift}'
