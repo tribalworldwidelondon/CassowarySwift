@@ -31,7 +31,7 @@
 
  */
 
-public class Variable: CustomStringConvertible {
+public final class Variable: CustomStringConvertible {
     private weak var _owner: AnyObject?
     
     private var _name: String?

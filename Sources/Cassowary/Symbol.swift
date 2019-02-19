@@ -31,7 +31,7 @@
 
  */
 
-public class Symbol {
+public final class Symbol {
     public enum SymbolType {
         case invalid
         case external

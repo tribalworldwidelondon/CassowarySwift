@@ -256,5 +256,5 @@ public func modifyStrength(_ constraint: Constraint, _ strength: CGFloat) -> Con
 }
 
 public func modifyStrength(_ strength: CGFloat, _ constraint: Constraint) -> Constraint {
-    return modifyStrength(strength, constraint)
+    return modifyStrength(constraint, strength)
 }

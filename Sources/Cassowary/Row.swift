@@ -33,7 +33,7 @@
 
 import Foundation
 
-public class Row {
+public final class Row {
 
     private(set) var constant: Double
 

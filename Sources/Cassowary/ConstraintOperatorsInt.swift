@@ -256,6 +256,6 @@ public func modifyStrength(_ constraint: Constraint, _ strength: Int) -> Constra
 }
 
 public func modifyStrength(_ strength: Int, _ constraint: Constraint) -> Constraint {
-    return modifyStrength(strength, constraint)
+    return modifyStrength(constraint, strength)
 }
 

@@ -32,7 +32,7 @@
  */
 
 
-public class Strength {
+public final class Strength {
 
     public static var REQUIRED: Double = create(1000.0, 1000.0, 1000.0)
 

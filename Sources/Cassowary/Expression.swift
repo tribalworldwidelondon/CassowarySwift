@@ -31,7 +31,7 @@
 
  */
 
-public class Expression: CustomStringConvertible, CassowaryDebugDescription {
+public final class Expression: CustomStringConvertible, CassowaryDebugDescription {
     private weak var _owner: AnyObject?
     
     private var _desc: String?

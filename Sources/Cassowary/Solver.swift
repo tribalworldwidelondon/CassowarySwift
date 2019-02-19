@@ -31,7 +31,7 @@
 
  */
 
-public class Solver {
+public final class Solver {
 
     private class Tag {
         var marker: Symbol = Symbol()

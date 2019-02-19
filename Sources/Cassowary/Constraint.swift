@@ -126,7 +126,7 @@ extension Constraint: Hashable {
 
 // MARK: - EditConstraint
 
-internal class EditConstraint: Constraint {
+internal final class EditConstraint: Constraint {
     internal var suggestedValue: Double?
     
     /// :nodoc:

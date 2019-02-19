@@ -31,7 +31,7 @@
 
  */
 
-public class Term: CustomStringConvertible, CassowaryDebugDescription {
+public final class Term: CustomStringConvertible, CassowaryDebugDescription {
     var debugDescription: String = ""
     
     func addingDebugDescription(_ desc: String) -> Self {
